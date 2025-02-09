@@ -1,4 +1,5 @@
 mod log_model;
+mod channel_example;
 
 use std::process::{Command, Stdio};
 use std::io::{BufRead, BufReader};
