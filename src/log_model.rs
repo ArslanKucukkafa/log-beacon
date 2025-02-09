@@ -1,16 +1,25 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset};
 
+#[derive(Debug)]
 pub struct LogModel {
     pub level: LogLevel,
-    pub time: DateTime<Utc>,
+    pub time: DateTime<FixedOffset>,
     pub service: String,
     pub class: String,
     pub message: String,
 }
 
+
+#[derive(Debug)]
 pub enum LogLevel {
-    Info,
-    Warning,
-    Error,
-    Debug,
+    INFO,
+    WARN,
+    ERROR,
+    DEBUG,
+    TRACE,
+}
+
+pub struct LogTag {
+    pub name: String,
+    pub value: String,
 }

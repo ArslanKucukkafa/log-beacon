@@ -1,0 +1,13 @@
+name:description
+websocket güvenliği:remote sunucudaki loglarımıza herkeş erişmemeli. Ben private, public key ile erişmeliyim.
+log storage:loglarımızı saklamayacagız. Amaç sadece realtime izlemek.
+log level change:log level değişikliği yapılmalı. Bu sayede kullanıcılar sadece belirli logları izleyebilmeli.
+log suspend: Bazı class ve servisler için logları suspend edebilmeliyim.
+log condition: Bazı class ve servislerden log geldiginde onları tagleyebilmeliyim.
+
+
+condition: Amaç kullanıcı belli bir classtan, yada servisten sadece log bekliyorsa, o class ve servislerin loglarını vermeliyim.
+suspend: Amaç kullanıcı belli bir classtan, yada servisten gelen logları almak istemiyorsa, o class ve servislerin loglarını vermemeliyim.
+level: Amaç kullanıcı sadece belirli bir log leveli izlemek istiyorsa, o log leveli verilmeli.
+
+log cache: suspend, condition için cache kullanılmalı. Bu sayede loglar dogru şekilde filtrelenmeli.
