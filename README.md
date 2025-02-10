@@ -20,8 +20,11 @@ Bu proje, Rust ile geliştirilmiş, uzak sunuculardaki logları gerçek zamanlı
 
 ## Kurulum
 
+
 ```bash
 cargo install rust-log-izleme-araci
+```
+
 Kullanım
 Anahtar Çifti Oluşturma:
 

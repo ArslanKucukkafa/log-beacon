@@ -1,4 +1,5 @@
 use chrono::{DateTime, FixedOffset};
+use clap_derive::ValueEnum;
 
 #[derive(Debug)]
 pub struct LogModel {
@@ -10,7 +11,7 @@ pub struct LogModel {
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, ValueEnum, Clone)]
 pub enum LogLevel {
     INFO,
     WARN,

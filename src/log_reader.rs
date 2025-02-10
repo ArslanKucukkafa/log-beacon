@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use regex::Regex;
 use crate::log_model::{LogLevel, LogModel};
-use chrono::{DateTime, FixedOffset};
+use chrono::{DateTime};
 
 pub fn start_read(){
 
@@ -17,20 +17,16 @@ pub fn start_read(){
         .expect("Failed to execute process ❌");
 
 
-    /// FIXME: Burda stdout ve stderr arasında arasında bir async sorunumuz var. Stacktrace mesajı stderr den alınırken, stacktrace mesajının geri kalanı stodout'dan çıkıyor.
-    /// ## ÇÖZÜM:
-    /// - stdout ve stderr'ı tek bir channel üzerinde okumalıyız.
+    // FIXME: Burda stdout ve stderr arasında arasında bir async sorunumuz var. Stacktrace mesajı stderr den alınırken, stacktrace mesajının geri kalanı stodout'dan çıkıyor.
+    // ## ÇÖZÜM:
+    // - stdout ve stderr'ı tek bir channel üzerinde okumalıyız.
 
 
     let stdout = Arc::new(Mutex::new(child.stdout.take().expect("Stdout okunamıyor!")));
     let stderr = Arc::new(Mutex::new(child.stderr.take().expect("Stderr okunamıyor!")));
 
-
-    let log_levels = Arc::new(Regex::new(r"(?i)\b(INFO|ERROR|WARN|DEBUG|TRACE|STACKTRACE)\b").unwrap());
-
     let stdout_thread = {
         let stdout = Arc::clone(&stdout);
-        let log_levels = Arc::clone(&log_levels);
         thread::spawn(move || {
             let mut stdout = stdout.lock().unwrap();
             let reader = BufReader::new(&mut *stdout);
@@ -47,7 +43,6 @@ pub fn start_read(){
 
     let stderr_thread = {
         let stderr = Arc::clone(&stderr);
-        let log_levels = Arc::clone(&log_levels);
         thread::spawn(move || {
             let mut stderr = stderr.lock().unwrap();
             let reader = BufReader::new(&mut *stderr);
@@ -64,6 +59,9 @@ pub fn start_read(){
 
 // convert to string log like as "2025-02-09T16:37:12.845+03:00  INFO 64920 --- [log-producer-app] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.34]" convert to LogModel
 
+
+/// log_readers::parse_log() fonksiyonu, verilen log satırını parse ederek LogModel döner.
+/// fixme: ?? parse_log fonksiyonu sadece java logları için çalışır. Bu fonksiyonu genelleştirmek için ne yapabiliriz?
 
 fn parse_log(log: &str) -> Option<LogModel> {
     let re = Regex::new(r"(?x)
