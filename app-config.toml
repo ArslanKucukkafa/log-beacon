@@ -1,0 +1,21 @@
+## Arslan.kucukkafa: Bu dosya içerisinde log-beacon projesinin bağımlılıkları ve proje ayarları bulunmaktadır.
+
+# Log seviyeleri (DÜZELTİLMİŞ HALİ)
+[log]
+levels = ["INFO", "ERROR", "WARN", "DEBUG", "TRACE"]
+
+# Socket ayarları
+[socket]
+port = "8080"
+
+[suspend]
+classes = { UserService = "UserService", UserController = "UserController" }
+services = { AuthManagement = "AuthManagement", Gateway = "Gateway" }
+
+[condition]
+classes = { UserService = "UserService" }
+services = { Gateway = "Gateway" }
+
+[tag]
+classes = { UserController = "UserController" }
+services = { AuthManagement = "AuthManagement" }

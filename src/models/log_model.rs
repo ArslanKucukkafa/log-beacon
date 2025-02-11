@@ -1,5 +1,6 @@
 use chrono::{DateTime, FixedOffset};
 use clap_derive::ValueEnum;
+use serde::Deserialize;
 
 #[derive(Debug)]
 pub struct LogModel {
@@ -11,7 +12,8 @@ pub struct LogModel {
 }
 
 
-#[derive(Debug, ValueEnum, Clone)]
+#[derive(Debug, ValueEnum, Clone, Deserialize)]
+#[serde(rename_all = "UPPERCASE")]
 pub enum LogLevel {
     INFO,
     WARN,

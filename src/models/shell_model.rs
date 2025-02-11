@@ -1,22 +1,27 @@
 use clap::{Subcommand, Args};
+use clap_complete::Shell;
 use clap_derive::{Args, Parser, Subcommand, ValueEnum};
+use clearscreen::ClearScreen;
 use crate::log_model::LogLevel;
 
 #[derive(Parser, Debug)]
-#[command(name = "log-beacon")]
 #[command(
+    name = "log-beacon",
     author = "Arslan Kucukkafa", 
     about = "CLI application for managing logs", 
-    long_about = None, 
+    long_about = "Log yönetimi için CLI aracı\n\nInteraktif modda çalıştırıldığında ek komutlar mevcuttur",
     version = "0.1.0",
     subcommand_help_heading = "Commands",
-    arg_required_else_help = true,
-    subcommand_required = true
+    subcommand_required = false,
+    arg_required_else_help = false
 )]
 pub struct Cli {
     #[command(subcommand)]
-    pub command: Commands,
+    pub command: Option<Commands>,
+    #[arg(long)]
+    pub completion: Option<Shell>
 }
+
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
@@ -36,13 +41,7 @@ pub enum Commands {
     Tag(Tag),
 
     #[command(name = "config", about = "Get your current LogBeacon configurations")]
-    Configurations,
-
-    #[command(name = "exit", about = "Exit the application")]
-    Exit,
-
-    #[command(name = "clear", about = "Clear the screen")]
-    Clear,
+    Configurations
 }
 
 #[derive(Args, Debug)]

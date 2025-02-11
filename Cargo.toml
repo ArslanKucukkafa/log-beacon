@@ -18,3 +18,7 @@ shlex = "1.3.0"
 comfy-table = "7.1.4"
 # clear screen terminal alanı temizlenmesi için eklendi.
 clearscreen = "4.0.1"
+clap_complete = "4.5.44"
+colored = "3.0.0"
+serde = { version = "1.0.217", features = ["derive"] }
+toml = "0.8.20"

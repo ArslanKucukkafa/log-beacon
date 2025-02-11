@@ -1,6 +1,9 @@
 use comfy_table::Table;
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::TableComponent::*;
+
+// FIXME: Bu servise artık ihitiyaç kaldı mı emin değilim.
+// auto-complete ve log-beacon --help komutları zaten çalışıyor.
 pub fn show_help() {
     let mut table = Table::new();
     table
