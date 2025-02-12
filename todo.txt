@@ -11,3 +11,7 @@ suspend: Amaç kullanıcı belli bir classtan, yada servisten gelen logları alm
 level: Amaç kullanıcı sadece belirli bir log leveli izlemek istiyorsa, o log leveli verilmeli.
 
 log cache: suspend, condition için cache kullanılmalı. Bu sayede loglar dogru şekilde filtrelenmeli.
+
+
+Kullanıcı projesinde kullandıgı log-type özelleştirmiş olabilir. Bu yüzden logları regex ile parse ederken sabit bir yapı kullanmamalıyız. Kullanıcıya özelleştirilebilir bir yapı sunmalıyız.
+Bunun için log formatı ve regex patterni kullanıcı tarafından belirlenebilmeli. Bunun için kullanıya bir regex builder sunmalıyız.

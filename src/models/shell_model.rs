@@ -40,6 +40,9 @@ pub enum Commands {
     #[command(name = "tag", about = "Belirli sınıf veya servislere etiket ekleme")]
     Tag(Tag),
 
+    #[command(name = "regex", about = "Parse logs with regex")]
+    Regexp(Regexp),
+
     #[command(name = "config", about = "Get your current LogBeacon configurations")]
     Configurations
 }
@@ -91,6 +94,17 @@ pub struct Tag {
     
     #[clap(help = "what tag do you want to add?")]
     pub tag: String,
+}
+
+#[derive(Args, Debug)]
+pub struct Regexp {
+    // Burda aldıgımız regex pattern'ı app-config.toml dosyasına kaydedip, logları bu pattern'a göre parse edebiliriz.
+    #[clap(help = "Add regex pattern for your custom log")]
+    pub pattern: String,
+
+    // Burda aldıgımız sample log ile regex pattern'ı test edebiliriz.
+    #[clap(help = "Sample log for testing regex pattern")]
+    pub sample_log: String
 }
 
 /// - `FilterableObjects` enumu benim condition, suspend ve tag komutlarında filtreleyebileceigm bir enumları içerir. Bu enum sayesinde daha net bir filterable object belirleyebilirim.

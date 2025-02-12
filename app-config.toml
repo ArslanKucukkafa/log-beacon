@@ -19,3 +19,6 @@ services = { Gateway = "Gateway" }
 [tag]
 classes = { UserController = "UserController" }
 services = { AuthManagement = "AuthManagement" }
+
+[log-regex]
+pattern = "^(?P<date>\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}),(?P<level>\\w+),(?P<class>\\w+),(?P<service>\\w+),(?P<log>.*)$"
