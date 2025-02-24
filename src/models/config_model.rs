@@ -1,44 +1,70 @@
 use std::collections::HashMap;
 use std::fs;
 use serde::Deserialize;
+use serde::Serialize;
 use crate::models::log_model::LogLevel;
-use crate::models::shell_model::Suspend;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Config {
     pub log: LogConfig,
     pub socket: SocketConfig,
     pub suspend: SuspendConfig,
     pub condition: ConditionConfig,
     pub tag: TagConfig,
+    pub regexp: RegexpConfig,
+    pub pid: PIDConfig
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct LogConfig {
-    pub levels: Vec<String>,
+    #[serde(rename = "levels")]
+    pub levels: Vec<LogLevel>,
+    #[serde(default)]
+    pub enabled: bool
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct SocketConfig {
     pub port: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct SuspendConfig {
-    pub classes: Option<HashMap<String, String>>,
-    pub services: Option<HashMap<String, String>>,
+    #[serde(default)]
+    pub classes: Vec<String>,
+    #[serde(default)]
+    pub services: Vec<String>,
+    #[serde(default)]
+    pub enabled: bool
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ConditionConfig {
-    pub classes: Option<HashMap<String, String>>,
-    pub services: Option<HashMap<String, String>>,
+    #[serde(default)]
+    pub classes: Vec<String>,
+    #[serde(default)]
+    pub services: Vec<String>,
+    #[serde(default)]
+    pub enabled: bool
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct TagConfig {
-    pub classes: Option<HashMap<String, String>>,
-    pub services: Option<HashMap<String, String>>,
+    pub classes: HashMap<String, Vec<String>>,
+    pub services: HashMap<String, Vec<String>>,
+    #[serde(default)]
+    pub enabled: bool
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct RegexpConfig {
+    pub pattern: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct PIDConfig {
+    pub socket_pid: String,
+    pub process_pid: String,
 }
 
 impl Config {

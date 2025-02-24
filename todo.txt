@@ -15,3 +15,22 @@ log cache: suspend, condition için cache kullanılmalı. Bu sayede loglar dogru
 
 Kullanıcı projesinde kullandıgı log-type özelleştirmiş olabilir. Bu yüzden logları regex ile parse ederken sabit bir yapı kullanmamalıyız. Kullanıcıya özelleştirilebilir bir yapı sunmalıyız.
 Bunun için log formatı ve regex patterni kullanıcı tarafından belirlenebilmeli. Bunun için kullanıya bir regex builder sunmalıyız.
+
+Condition verildiginde bir nevi suspend işlemi yapılıyor. Bunu şuan bu şekilde yapmaya devam edecegiz.
+
+Ekstra Özellik: sub process çalıştırıldıgında logları console'a yazdırmalı, ayrıca processin durumunu kullanıcıya iletmeliyiz.
+Mesela, java -jar app.jar gibi bir işlemle çalıştırılan bir processin çalışma durumu kullanıcıya bildirilmeli.
+
+
+1-log-beacon listen --port 8080 --args "java -jar app.jar" komutu girilir
+2-command_handler da komut match edilir ve listener servisindeki listen fonksiyonu çalıştırılır.
+3-listen fonksiyonu çalıştıgında, ilk önce socket server oluşturulur verilen config bilgileri ile.
+4-socket server oluşturulduktan sonra, verilen args ile process oluşturulur.
+5-process oluşturulduktan sonra, processin çıktıları dinlenir, filter edilir ve socket servera yazdırılır.
+6-socket servera yazdırılan loglar, clientlara broadcast edilir.
+note: iki adet port oluşacak, biri verilen args çalıştırıldıgında, diğeri ise socket server için oluşturulacak.
+note: stop etme işlemi daha optimize edilebilir. İlk sorun unix, windows farklılıkları olabilir.
+note: İkinci sorun, server çalıştırıldıktan sonra command çalıştırılması sırasında hata oldugunda, server durdurulmalı.
+note: Üçüncü sorun, socket ve commandların pidleri tutulamlı çünkü cli üzerinden stop edilmesi gerekebilir.
+note: Dördüncü sorun, processin durdurulması veya kontrol edilmesi unix ve windows farklılıkları olabilir. Bu yüzden iki işletim sistemi için ayrı ayrı işlemler yapılmalı.
+note: Beşinci sorun, processin durdurulması sırasında, socket serverın durdurulması gerekebilir. Bu yüzden process durdurulduktan sonra socket serverın durdurulması gerekebilir.

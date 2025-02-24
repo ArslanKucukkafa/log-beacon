@@ -1,49 +1,48 @@
-use std::ascii::AsciiExt;
-use std::env::Args;
-use std::io;
 use std::io::Write;
 use clap::{CommandFactory, Parser};
-use clap_complete::generate;
 use colored::Colorize;
-use log::logger;
-use comfy_table::Table;
+use rustyline::{error::ReadlineError, Editor};
+use rustyline::history::{FileHistory, History};
+use ctrlc;
+use std::process;
+use std::sync::Arc;
+use shellwords;
+use tokio::runtime::Runtime;
 
 mod models;
 use models::log_model;
-use models::shell_model::{Commands,Cli};
+use models::shell_model::Cli;
 
 mod services;
-use services::server;
-use services::tag_service;
-use services::condition_service;
-use services::suspend_service;
-use services::configuration_service;
 mod utils;
-use utils::completion;
-
 mod channel_example;
-mod log_reader;
 mod lru_cache;
+mod handlers;
+
 
 fn main() {
+    if std::env::args().len() > 1 {
+        let rt = Runtime::new().expect("Runtime oluşturulamadı");
 
-    configuration_service::get_config();
-    println!("-------------------------------------------------");
-
-    let cli = Cli::parse();
-
-    // Completion işlemi varsa sadece onu çalıştır ve çık
-    if let Some(shell) = cli.completion {
-        let mut cmd = Cli::command();
-        cmd.set_bin_name("log-beacon");
-        completion::generate_completion(shell, &mut cmd);
-        return;
+        rt.block_on(async {
+            let cli = Cli::parse();
+            if let Err(e) = handlers::command_handler::handle_command(cli.command).await {
+                eprintln!("Komut işleme hatası: {}", e);
+            }
+        });
+    } else {
+        // Tokio runtime'ı içinde çalıştır
+        tokio::runtime::Runtime::new()
+            .expect("Runtime oluşturulamadı")
+            .block_on(async {
+                if let Err(e) = run().await {
+                    eprintln!("Hata: {}", e);
+                }
+            });
     }
-
-    // Diğer komutlar için CLI döngüsünü başlat
-    println!("Command line application starting... 🚀");
-    start_cli();
 }
+
+
 
 // lru_cache::sample_cache()
 
@@ -52,63 +51,84 @@ fn main() {
 println!("Command line application starting... 🚀");
     log_reader::start_read();*/
 
-fn start_cli() {
+fn graceful_exit() -> ! {
+    println!("\n{}", "Çıkış yapılıyor...".yellow());
+    process::exit(0);
+}
+
+pub async fn run() -> Result<(), String> {
+    ctrlc::set_handler(|| graceful_exit())
+        .expect("Ctrl-C handler kurulamadı");
+
+    // Tarihçe yapılandırması
+    let mut rl = Editor::<(), FileHistory>::new()
+        .expect("Readline başlatılamadı");
+    rl.load_history("history.txt").ok(); // Geçmiş dosyası yoksa hata verme
+
+    println!("{}", "› Log Beacon CLI'ya hoş geldiniz".green().bold());
+    println!("{}", "  (Çıkış için 'exit' veya Ctrl+C)".dimmed());
+
     loop {
-        print!("👁️‍🗨️>>> "); // Print the prompt
-        std::io::stdout().flush().expect("Failed to flush stdout"); // Ensure the prompt is displayed immediately
-
-        let mut buf = String::new();
-        std::io::stdin().read_line(&mut buf).expect("Couldn't parse stdin");
-        let line = buf.trim();
-
-        // Check for exit or quit commands
-        if line.eq_ignore_ascii_case("exit") || line.eq_ignore_ascii_case("quit") {
-            println!("Exiting the log-beacon CLI... 👋");
-            break;
-        }
-
-        if line.eq_ignore_ascii_case("clear"){
-            clearscreen::clear().unwrap();
-            continue;
-        }
-
-        let args = shlex::split(line).expect("error: Invalid quoting");
-
-        match Cli::try_parse_from(args.iter()) {
-            Ok(cli) => {
-                match cli.command {
-                    Some(Commands::SocketServer(server)) => {
-                        println!("Starting WebSocket server with state: {:?}", "Running");
-                    }
-                    Some(Commands::Level(level)) => {
-                        println!("Modifying log level. Add: {:?}, Remove: {:?}", "INFO", "DEBUG");
-                    }
-                    Some(Commands::Suspend(suspend)) => {
-                        println!("Suspending logging for {:?} named {}", "SERVICE", "SERVICE_NAME");
-                    }
-                    Some(Commands::Condition(condition)) => {
-                        println!("Adding condition for {:?} named {}", "SERVICE", "SERVICE_NAME");
-                    }
-                    Some(Commands::Tag(tag)) => {
-                        println!("Adding tag '{}' for {:?} named {}", "IGNORE", "SERVICE", "SERVICE_NAME");
-                    }
-                    Some(Commands::Configurations) => {
-                        println!("Getting current LogBeacon configurations");
-                    }
-                    _ => {}
+        match rl.readline(&*"»»» ".green().bold().to_string()) {
+            Ok(line) => {
+                let input = line.trim();
+                if input.is_empty() {
+                    continue;
                 }
-            }
 
-            Err(e) => {
-                e.print().expect("Command not found");
+                rl.add_history_entry(input);
 
-                continue;
+                // Özel komutlar
+                match input.to_lowercase().as_str() {
+                    "exit" | "quit" => graceful_exit(),
+                    "clear" => {
+                        clearscreen::clear().unwrap();
+                        continue;
+                    }
+                    "history" => {
+                        let history = rl.history();
+                        if history.is_empty() {
+                            println!("{}", "Henüz komut geçmişi yok".dimmed());
+                        } else {
+                            println!("{} ({} komut):", "Geçmiş".cyan().bold(), history.len());
+                            for (i, entry) in history.iter().enumerate() {
+                                println!("{:4}  {}", i + 1, entry.dimmed());
+                            }
+                        }
+                        continue;
+                    }
+                    _ => ()
+                }
 
-                /*                println!("{}", format!("Command not found {}", line).red().bold());
-                help_service::show_help();
-                continue;*/
+                // Komut işleme
+                let args = shellwords::split(input)
+                    .map_err(|e| format!("Komut ayrıştırma hatası: {}", e))?;
+
+                match Cli::try_parse_from(args) {
+                    Ok(cli) => {
+                        // Asenkron fonksiyonu .await ile çağırın
+                        if let Err(e) = handlers::command_handler::handle_command(cli.command).await {
+                            eprintln!("{}: {}", "Hata".red().bold(), e);
+                        }
+                    },
+                    Err(e) => {
+                        let mut msg = e.to_string();
+                        msg += "\n\nÖzel Komutlar:\n  exit-quit-ctrlc\t\tÇıkış yap\n  clear\t\tEkranı temizle\n  history\tKomut geçmişini göster";
+                        eprintln!("{}: {}", "Geçersiz komut".yellow().bold(), msg);
+                    }
+                }
+
             },
-        };
-
+            Err(ReadlineError::Interrupted) => graceful_exit(), // Ctrl-C
+            Err(ReadlineError::Eof) => graceful_exit(),         // Ctrl-D
+            Err(err) => {
+                return Err(format!("Girdi hatası: {}", err));
+            }
+        }
     }
+
+    // Geçmişi kaydet
+    rl.save_history("history.txt")
+        .map_err(|e| format!("Geçmiş kaydetme hatası: {}", e))?;
+    Ok(())
 }

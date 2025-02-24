@@ -1,0 +1,68 @@
+use regex::Regex;
+use regex::escape as regex_escape;
+
+fn main() {
+    // 1. Kullanıcıdan alınan şablon ve log satırı
+    let user_template = "This is a debug message with parameter{}parameter{}cbhjbjhr3";
+    let log_line = "2025-02-13T16:47:14.634+03:00  INFO ... : This is a debug message with parameter{user: 'arslan', name:'hasan' }parameter{age: 30}cbhjbjhr3";
+
+    // 2. Log mesajını çıkar
+    let log_message = extract_message(log_line);
+    println!("Extracted Message: {}", log_message);
+
+    // 3. Şablonu regex'e dönüştür
+    let regex = template_to_regex(user_template);
+    println!("Generated Regex: {}", regex.as_str());
+
+    // 4. Eşleşme kontrolü
+    if regex.is_match(log_message) {
+        println!("✅ Log şablonla eşleşti!");
+
+        // 5. Parametreleri çıkar (opsiyonel)
+        if let Some(captures) = regex.captures(log_message) {
+            for (i, cap) in captures.iter().skip(1).enumerate() {
+                if let Some(m) = cap {
+                    println!("Param {}: {}", i + 1, m.as_str());
+                }
+            }
+        }
+    } else {
+        println!("❌ Eşleşme bulunamadı!");
+    }
+}
+
+// Log satırından mesajı çıkaran fonksiyon
+fn extract_message(log_line: &str) -> &str {
+    log_line.rsplitn(2, ": ").last().unwrap_or("").trim()
+}
+
+// Şablonu regex'e çeviren fonksiyon (güncellenmiş versiyon)
+fn template_to_regex(template: &str) -> Regex {
+    let placeholder_regex = r"\s*(\{[^}]*\})\s*"; // Sadece { ... } formatlı parametreler
+    let mut pattern = String::from(r"^");
+
+    let parts: Vec<&str> = template.split("{}").collect();
+    for (i, part) in parts.iter().enumerate() {
+        if i > 0 {
+            pattern.push_str(placeholder_regex);
+        }
+        pattern.push_str(&regex_escape(part));
+    }
+    pattern.push('$');
+
+    Regex::new(&pattern).expect("Geçersiz regex pattern'i")
+}
+
+
+log-beacon regex test --pattern "(?x)(?P<time>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}\+\d{2}:\d{2})\s+(?P<level>INFO|WARN|WARNING|ERROR|DEBUG)\s+\d+\s+---\s+\[\s*(?P<service>.*?)\s*\]\s+\[.*?\]\s+(?P<class>[^\s:]+)\s+:\s+(?P<message>.*)" --sample-log "2025-02-09T16:37:12.845+03:00  INFO 64920 --- [log-producer-app] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.34]"
+
+
+
+fn parse_log(log: &str) -> Option<LogModel> {
+    let re = Regex::new(r"(?x)
+        (?P<time>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}\+\d{2}:\d{2})\s+
+        (?P<level>INFO|WARN|WARNING|ERROR|DEBUG)\s+
+        \d+\s+---\s+\[\s*(?P<service>.*?)\s*\]\s+\[.*?\]\s+
+        (?P<class>[^\s:]+)\s+:\s+
+        (?P<message>.*)
+    ").unwrap();

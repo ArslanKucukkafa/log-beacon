@@ -1,0 +1,4 @@
+clear
+exit
+log-beacon
+log-beacon listen run "8040" "sdk use java 17.0.9-tem && java -jar /Users/arslankucukkafa/Desktop/log-producer-app/target/log-producer-app-0.0.1-SNAPSHOT.jar"

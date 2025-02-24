@@ -1,24 +1,35 @@
-## Arslan.kucukkafa: Bu dosya içerisinde log-beacon projesinin bağımlılıkları ve proje ayarları bulunmaktadır.
-
-# Log seviyeleri (DÜZELTİLMİŞ HALİ)
-[log]
-levels = ["INFO", "ERROR", "WARN", "DEBUG", "TRACE"]
-
-# Socket ayarları
 [socket]
 port = "8080"
 
+[log]
+levels = ["INFO", "ERROR", "WARN", "DEBUG", "TRACE"]
+enabled = true
+
 [suspend]
-classes = { UserService = "UserService", UserController = "UserController" }
-services = { AuthManagement = "AuthManagement", Gateway = "Gateway" }
+classes = ["UserService", "AuthController"]
+services = ["PaymentGateway"]
+enabled = true
 
 [condition]
-classes = { UserService = "UserService" }
-services = { Gateway = "Gateway" }
+classes = ["UserController", "UserService"]
+services = ["AuthService", "PaymentGateway"]
+enabled = false
+
+[tag.classes]
+arslan = ["roleService"]
+UserService = ["IGNORE", "DEBUG"]
+
+[tag.services]
+AuthService = ["SECURITY", "MONITORING"]
+DenemService = ["SECURITY", "MONITORING"]
 
 [tag]
-classes = { UserController = "UserController" }
-services = { AuthManagement = "AuthManagement" }
+enabled = true
 
-[log-regex]
-pattern = "^(?P<date>\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}),(?P<level>\\w+),(?P<class>\\w+),(?P<service>\\w+),(?P<log>.*)$"
+[regexp]
+pattern = "(?P<time>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[+-]\\d{2}:\\d{2})\\s+(?P<level>\\w+)\\s+(?P<pid>\\d+)\\s+---\\s+\\[(?P<service>[^\\]]+)\\]\\s+\\[(?P<thread>[^\\]]+)\\]\\s+(?P<class>[^:]+)\\s*:\\s*(?P<message>.*)"
+sample_log = ""
+
+[pid]
+socket_pid = ""
+process_pid = ""
