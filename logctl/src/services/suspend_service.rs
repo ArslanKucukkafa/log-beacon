@@ -1,4 +1,5 @@
 use std::fs;
+use log::info;
 use crate::models::config_model::Config;
 use crate::models::shell_model::{ObjectType, SuspendSubcommand};
 use crate::services::configuration_service::{save_config, load_config};
@@ -49,7 +50,8 @@ pub fn list_suspends() -> Result<(), String> {
             .map(|c| c.to_string())
             .collect::<Vec<String>>()
             .join(", ");
-        println!("Suspended Classes: {}", classes);
+        info!("Suspended Classes: {}", classes);
+        // println!("Suspended Classes: {}", classes);
     }
 
     if !config.suspend.services.is_empty() {
@@ -57,7 +59,8 @@ pub fn list_suspends() -> Result<(), String> {
             .map(|s| s.to_string())
             .collect::<Vec<String>>()
             .join(", ");
-        println!("Suspended Services: {}", services);
+        info!("Suspended Services: {}", services);
+        // println!("Suspended Services: {}", services);
     }
 
     Ok(())

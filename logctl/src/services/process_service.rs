@@ -1,8 +1,10 @@
 use std::io::{BufRead, BufReader};
+use std::os::unix::process::CommandExt;
 use std::process::{Child, Command, Stdio};
 use std::sync::{mpsc, Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
+use log::error;
 use nix::unistd::Pid;
 use sysinfo::{ProcessesToUpdate, System};
 use crate::models::config_model::Config;
@@ -10,6 +12,9 @@ use crate::services::configuration_service;
 use crate::services::configuration_service::save_config;
 use crate::models::log_model::{LogModel, LogLevel};
 use crate::services::log_parser::parse_log;
+use std::time::Duration;
+use nix::libc;
+use nix::unistd::{setsid};
 
 #[derive(Debug)]
 pub struct ProcessService {
@@ -46,6 +51,7 @@ impl ProcessService {
             .spawn()
             .expect("Failed to start process");
 
+        // Stdout log yakalama ve parse etme
         let stdout = child.stdout.take().unwrap();
         let tx_stdout = tx.clone();
         let stop_flag_stdout = Arc::clone(&stop_flag);
@@ -61,7 +67,8 @@ impl ProcessService {
                     match parse_log(&line, &pattern_stdout) {
                         Ok(log_model) => {
                             if let Err(e) = tx_stdout.send(log_model) {
-                                eprintln!("Log gönderme hatası: {}", e);
+                                // eprintln!("Log gönderme hatası: {}", e);
+                                error!("Log gönderme hatası: {}", e);
                             }
                         }
                         Err(e) => {
@@ -74,7 +81,8 @@ impl ProcessService {
                                 tags: vec!["parse_error".to_string()]
                             };
                             if let Err(e) = tx_stdout.send(log) {
-                                eprintln!("Log gönderme hatası: {}", e);
+                                // eprintln!("Log gönderme hatası: {}", e);
+                                error!("Log gönderme hatası: {}", e);
                             }
                         }
                     }
@@ -99,7 +107,8 @@ impl ProcessService {
                         Ok(mut log_model) => {
                             log_model.level = LogLevel::ERROR; // stderr için seviyeyi ERROR yap
                             if let Err(e) = tx_stderr.send(log_model) {
-                                eprintln!("Log gönderme hatası: {}", e);
+                                // eprintln!("Log gönderme hatası: {}", e);
+                                error!("Log gönderme hatası: {}", e);
                             }
                         }
                         Err(_) => {
@@ -112,7 +121,8 @@ impl ProcessService {
                                 tags: vec![]
                             };
                             if let Err(e) = tx_stderr.send(log) {
-                                eprintln!("Log gönderme hatası: {}", e);
+                                // eprintln!("Log gönderme hatası: {}", e);
+                                error!("Log gönderme hatası: {}", e);
                             }
                         }
                     }
@@ -178,5 +188,64 @@ impl ProcessService {
             sys.refresh_processes(ProcessesToUpdate::All, true);
             sys.process(Pid::from(pid as usize)).is_some()
         }
+    }
+
+    pub fn run_daemon_aware(&mut self, command: &str) -> mpsc::Receiver<LogModel> {
+        let (tx, rx) = mpsc::channel();
+
+        let child = unsafe { let fork = libc::fork() };
+        match child {
+            -1 => panic!("Fork failed"),
+            0 => { // Child process
+                // Yeni process grubu oluştur
+                setsid().expect("setsid failed");
+
+                // Process'i başlat
+                let mut cmd = Command::new("/bin/bash");
+                cmd.arg("-c")
+                    .arg(command)
+                    .stdout(Stdio::piped())
+                    .stderr(Stdio::piped())
+                    .process_group(0); // Aynı process grubunu kullan
+
+                // Sinyal maskesini sıfırla
+                unsafe {
+                    libc::sigemptyset(&mut libc::sigset_t);
+                    libc::sigprocmask(libc::SIG_SETMASK, &libc::sigset, std::ptr::null_mut());
+                }
+
+                let mut child = cmd.spawn().expect("Process başlatılamadı");
+
+                // PID'i kaydet
+                self.child = Some(child);
+
+                // Log yakalama thread'lerini başlat
+                self.start_log_threads(tx);
+
+                // Sonsuz döngüde bekle
+                loop {
+                    std::thread::sleep(Duration::from_secs(3600));
+                }
+            }
+            _ => { // Parent process
+                // Child PID'i kaydet
+                self.config.pid.process_pid = child.to_string();
+                self.save_config().expect("PID kaydedilemedi");
+            }
+        }
+
+        rx
+    }
+
+    fn start_log_threads(&self, tx: mpsc::Sender<LogModel>) {
+        // Implementation of start_log_threads method
+    }
+
+    pub fn stop_daemon_aware(&self) -> bool {
+        // Tüm process grubunu sonlandır
+        unsafe {
+            libc::killpg(0, libc::SIGTERM);
+        }
+        true
     }
 }
