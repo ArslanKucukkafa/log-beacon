@@ -1,5 +1,5 @@
-use crate::log_model::LogModel;
 use crate::models::config_model::Config;
+use crate::models::log_model::LogModel;
 
 pub struct FilterService {
     config: Config,
@@ -87,4 +87,4 @@ impl FilterService {
             }
         }
     }
-} 
+}

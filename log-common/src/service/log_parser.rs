@@ -1,11 +1,6 @@
-use std::io::{BufRead, BufReader};
-use std::process::{Command, Stdio};
-use std::sync::{Arc, Mutex};
-use std::thread;
-use regex::Regex;
-use crate::log_model::{LogLevel, LogModel};
 use chrono::{DateTime};
-use crate::services::configuration_service;
+use regex::Regex;
+use crate::models::log_model::{LogModel, LogLevel};
 
 
 /// convert to string log like as "2025-02-09T16:37:12.845+03:00  INFO 64920 --- [log-producer-app] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.34]" convert to LogModel

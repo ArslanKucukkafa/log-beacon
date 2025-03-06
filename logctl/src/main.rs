@@ -8,9 +8,9 @@ use std::process;
 use std::sync::Arc;
 use shellwords;
 use tokio::runtime::Runtime;
+use log_common::service::config_service::load_config;
 
 mod models;
-use models::log_model;
 use models::shell_model::Cli;
 
 mod services;

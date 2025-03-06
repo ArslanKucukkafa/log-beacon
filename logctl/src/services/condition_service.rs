@@ -1,6 +1,6 @@
 use log::info;
+use log_common::service::config_service::{load_config, save_config};
 use crate::models::shell_model::ObjectType;
-use crate::services::configuration_service::{load_config, save_config};
 
 pub fn add_condition(
     object_type: ObjectType,

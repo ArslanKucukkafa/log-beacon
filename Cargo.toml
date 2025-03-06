@@ -5,7 +5,6 @@ version = "0.1.0"
 description = "Log Beacon CLI is a tool to view logs from multiple sources"
 
 [workspace]
-resolver = "2"
 members = ["log-common","log-engine","logctl"]
 
 [workspace.dependencies]

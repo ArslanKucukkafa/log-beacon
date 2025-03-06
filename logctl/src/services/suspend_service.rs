@@ -1,9 +1,6 @@
-use std::fs;
 use log::info;
-use crate::models::config_model::Config;
+use log_common::service::config_service::{load_config, save_config};
 use crate::models::shell_model::{ObjectType, SuspendSubcommand};
-use crate::services::configuration_service::{save_config, load_config};
-
 pub fn add_suspension(
     object_type: ObjectType,
     object_name: &str
