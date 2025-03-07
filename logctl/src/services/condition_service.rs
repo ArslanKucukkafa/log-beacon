@@ -1,5 +1,6 @@
+use log::info;
+use log_common::service::config_service::{load_config, save_config};
 use crate::models::shell_model::ObjectType;
-use crate::services::configuration_service::{load_config, save_config};
 
 pub fn add_condition(
     object_type: ObjectType,
@@ -49,13 +50,15 @@ pub fn list_conditions() -> Result<(), String> {
     if !config.condition.classes.is_empty() {
         println!("Condition Classes:");
         for class in &config.condition.classes {
-            println!("- {}", class);
+            info!("Condition Classes: {}", class);
+            // println!("- {}", class);
         }
     }
 
     if !config.condition.services.is_empty() {
         println!("\nCondition Services:");
         for service in &config.condition.services {
+            info!("Condition Services: {}", service);
             println!("- {}", service);
         }
     }

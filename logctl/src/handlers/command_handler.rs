@@ -8,6 +8,7 @@ use crate::services::regexp_service::test_regexp;
 use crossterm::style::Stylize;
 use futures_util::TryFutureExt;
 use tokio;
+use log_common::service::config_service;
 
 pub async fn handle_command(command: Commands) -> Result<(), String> {
     match command {
@@ -18,7 +19,7 @@ pub async fn handle_command(command: Commands) -> Result<(), String> {
         Commands::Tag(tag_command) => handle_tag(tag_command),
         Commands::Regexp(regexp_command) => handle_regexp(regexp_command),
         Commands::Config => {
-            let config = configuration_service::load_config()?;
+            let config = config_service::load_config()?;
             configuration_service::display_config(&config);
             Ok(())
         }

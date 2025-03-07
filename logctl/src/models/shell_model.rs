@@ -3,8 +3,8 @@ use clap_complete::Shell;
 use clap_derive::{Args, Parser, Subcommand, ValueEnum};
 use clearscreen::ClearScreen;
 use serde::{Deserialize, Serialize};
-use crate::log_model::LogLevel;
 use std::str::FromStr;
+use log_common::models::log_model::LogLevel;
 
 #[derive(Parser)]
 #[command(

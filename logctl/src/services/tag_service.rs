@@ -1,8 +1,8 @@
-use crate::models::config_model::Config;
 use std::collections::HashMap;
 use crate::models::shell_model::ObjectType;
 use crate::services::configuration_service;
 use std::fs;
+use log::info;
 use crate::services::configuration_service::save_config;
 
 /// Burda tag işlemleri yapılacak
@@ -70,14 +70,16 @@ pub fn list_tags() {
     if !config.tag.classes.is_empty() {
         println!("Tagged Classes:");
         for (class, tags) in &config.tag.classes {
-            println!("- {}: {}", class, tags.join(", "));
+            info!("- {}: {}", class, tags.join(", "));
+            // println!("- {}: {}", class, tags.join(", "));
         }
     }
 
     if !config.tag.services.is_empty() {
         println!("\nTagged Services:");
         for (service, tags) in &config.tag.services {
-            println!("- {}: {}", service, tags.join(", "));
+            info!("- {}: {}", service, tags.join(", "));
+            // println!("- {}: {}", service, tags.join(", "));
         }
     }
 }

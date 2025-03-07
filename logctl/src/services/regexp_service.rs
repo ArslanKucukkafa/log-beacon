@@ -1,10 +1,10 @@
-use crate::services::log_parser::parse_log;
 use crate::models::shell_model::ObjectType;
-use crate::services::configuration_service::{load_config, save_config};
 use comfy_table::{Table, Row, Cell, ContentArrangement};
 use regex::Regex;
 use comfy_table::Color;
 use chrono::format;
+use log_common::service::config_service::{load_config, save_config};
+use log_common::service::log_parser::parse_log;
 
 pub fn add_regexp(
     pattern: &str

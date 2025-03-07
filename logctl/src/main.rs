@@ -8,38 +8,25 @@ use std::process;
 use std::sync::Arc;
 use shellwords;
 use tokio::runtime::Runtime;
+use log_common::service::config_service::load_config;
 
 mod models;
-use models::log_model;
 use models::shell_model::Cli;
 
 mod services;
 mod utils;
-mod channel_example;
-mod lru_cache;
 mod handlers;
 
 
 fn main() {
-    if std::env::args().len() > 1 {
-        let rt = Runtime::new().expect("Runtime oluşturulamadı");
-
-        rt.block_on(async {
-            let cli = Cli::parse();
-            if let Err(e) = handlers::command_handler::handle_command(cli.command).await {
-                eprintln!("Komut işleme hatası: {}", e);
-            }
-        });
-    } else {
-        // Tokio runtime'ı içinde çalıştır
-        tokio::runtime::Runtime::new()
-            .expect("Runtime oluşturulamadı")
-            .block_on(async {
-                if let Err(e) = run().await {
-                    eprintln!("Hata: {}", e);
-                }
-            });
-    }
+    let config = load_config().unwrap();
+    let mut process_service = ProcessService::new();
+    
+    // Log toplayıcıyı daemon olarak başlat
+    let log_receiver = process_service.run_daemonized(&config.command);
+    
+    // Listener'ı daemon olarak başlat
+    start_listener(config.args, config.port).unwrap();
 }
 
 
